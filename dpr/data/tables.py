@@ -1,13 +1,11 @@
 import collections
 import csv
 import json
-import logging
-import unicodedata
-
 import jsonlines
+import logging
 import spacy as spacy
-from typing import List, Dict
-
+import unicodedata
+from typing import Dict, List
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -293,7 +291,7 @@ def has_prepared_answer(prep_answers: List[List[str]], text: List[str]):
 
     for single_answer in prep_answers:
         for i in range(0, len(text) - len(single_answer) + 1):
-            if single_answer == text[i : i + len(single_answer)]:
+            if single_answer == text[i: i + len(single_answer)]:
                 return True
     return False
 
@@ -316,13 +314,13 @@ def has_answer(answers, text, regMatxh=False):
             single_answer = tokenize(single_answer)
 
             for i in range(0, len(text) - len(single_answer) + 1):
-                if single_answer == text[i : i + len(single_answer)]:
+                if single_answer == text[i: i + len(single_answer)]:
                     return True
     return False
 
 
 def convert_search_res_to_dpr_and_eval(
-    res_file, all_tables_file_jsonl, nq_table_file, out_file, gold_res_file: str = None
+        res_file, all_tables_file_jsonl, nq_table_file, out_file, gold_res_file: str = None
 ):
     db = {}
     id = 0
@@ -591,7 +589,7 @@ def convert_train_jsonl_to_ctxmatch(path: str, out_file: str):
     shard = 0
 
     for s in range(0, len(results), shards_sz):
-        chunk = results[s : s + shards_sz]
+        chunk = results[s: s + shards_sz]
         shard_file = out_file + ".shard_{}".format(shard)
         with jsonlines.open(shard_file, mode="w") as writer:
             logger.info("Saving to %s", shard_file)

@@ -108,7 +108,7 @@ class Tokens(object):
             (s, e + 1)
             for s in range(len(words))
             for e in range(s, min(s + n, len(words)))
-            if not _skip(words[s : e + 1])
+            if not _skip(words[s: e + 1])
         ]
 
         # Concatenate into strings

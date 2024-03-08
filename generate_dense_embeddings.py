@@ -9,48 +9,42 @@
  Command line tool that produces embeddings for a large documents base based on the pretrained ctx & question encoders
  Supposed to be used in a 'sharded' way to speed up the process.
 """
+import hydra
 import logging
 import math
+import numpy as np
 import os
 import pathlib
 import pickle
-from typing import List, Tuple
-
-import hydra
-import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
 from torch import nn
+from typing import List, Tuple
 
 from dpr.data.biencoder_data import BiEncoderPassage
 from dpr.models import init_biencoder_components
 from dpr.options import set_cfg_params_from_state, setup_cfg_gpu, setup_logger
-
 from dpr.utils.data_utils import Tensorizer
-from dpr.utils.model_utils import (
-    setup_for_distributed_mode,
-    get_model_obj,
-    load_states_from_checkpoint,
-    move_to_device,
-)
+from dpr.utils.model_utils import (get_model_obj, load_states_from_checkpoint, move_to_device,
+                                   setup_for_distributed_mode)
 
 logger = logging.getLogger()
 setup_logger(logger)
 
 
 def gen_ctx_vectors(
-    cfg: DictConfig,
-    ctx_rows: List[Tuple[object, BiEncoderPassage]],
-    model: nn.Module,
-    tensorizer: Tensorizer,
-    insert_title: bool = True,
+        cfg: DictConfig,
+        ctx_rows: List[Tuple[object, BiEncoderPassage]],
+        model: nn.Module,
+        tensorizer: Tensorizer,
+        insert_title: bool = True,
 ) -> List[Tuple[object, np.array]]:
     n = len(ctx_rows)
     bsz = cfg.batch_size
     total = 0
     results = []
     for j, batch_start in enumerate(range(0, n, bsz)):
-        batch = ctx_rows[batch_start : batch_start + bsz]
+        batch = ctx_rows[batch_start: batch_start + bsz]
         batch_token_tensors = [
             tensorizer.text_to_tensor(ctx[1].text, title=ctx[1].title if insert_title else None) for ctx in batch
         ]
@@ -83,7 +77,6 @@ def gen_ctx_vectors(
 
 @hydra.main(config_path="conf", config_name="gen_embs")
 def main(cfg: DictConfig):
-
     assert cfg.model_file, "Please specify encoder checkpoint as model_file param"
     assert cfg.ctx_src, "Please specify passages source as ctx_src param"
 

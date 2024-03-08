@@ -10,46 +10,27 @@
  Pipeline to train DPR Biencoder
 """
 
+import hydra
 import logging
 import math
 import os
 import random
 import sys
 import time
-from typing import Tuple
-
-import hydra
 import torch
 from omegaconf import DictConfig, OmegaConf
-from torch import Tensor as T
-from torch import nn
+from torch import Tensor as T, nn
+from typing import Tuple
 
 from dpr.models import init_biencoder_components
-from dpr.models.biencoder import BiEncoderNllLoss, BiEncoderBatch
-from dpr.options import (
-    setup_cfg_gpu,
-    set_seed,
-    get_encoder_params_state_from_cfg,
-    set_cfg_params_from_state,
-    setup_logger,
-)
+from dpr.models.biencoder import BiEncoderBatch, BiEncoderNllLoss
+from dpr.options import (get_encoder_params_state_from_cfg, set_cfg_params_from_state, set_seed, setup_cfg_gpu,
+                         setup_logger)
 from dpr.utils.conf_utils import BiencoderDatasetsCfg
-from dpr.utils.data_utils import (
-    ShardedDataIterator,
-    Tensorizer,
-    MultiSetDataIterator,
-    LocalShardedDataIterator,
-)
+from dpr.utils.data_utils import (LocalShardedDataIterator, MultiSetDataIterator, ShardedDataIterator, Tensorizer)
 from dpr.utils.dist_utils import all_gather_list
-from dpr.utils.model_utils import (
-    setup_for_distributed_mode,
-    move_to_device,
-    get_schedule_linear,
-    CheckpointState,
-    get_model_file,
-    get_model_obj,
-    load_states_from_checkpoint,
-)
+from dpr.utils.model_utils import (CheckpointState, get_model_file, get_model_obj, get_schedule_linear,
+                                   load_states_from_checkpoint, move_to_device, setup_for_distributed_mode)
 
 logger = logging.getLogger()
 setup_logger(logger)
@@ -104,13 +85,13 @@ class BiEncoderTrainer(object):
         self.dev_iterator = None
 
     def get_data_iterator(
-        self,
-        batch_size: int,
-        is_train_set: bool,
-        shuffle=True,
-        shuffle_seed: int = 0,
-        offset: int = 0,
-        rank: int = 0,
+            self,
+            batch_size: int,
+            is_train_set: bool,
+            shuffle=True,
+            shuffle_seed: int = 0,
+            offset: int = 0,
+            rank: int = 0,
     ):
 
         hydra_datasets = self.ds_cfg.train_datasets if is_train_set else self.ds_cfg.dev_datasets
@@ -363,8 +344,8 @@ class BiEncoderTrainer(object):
                     # otherwise the other input tensors will be split but only the first split will be called
                     continue
 
-                ctx_ids_batch = ctxs_ids[batch_start : batch_start + sub_batch_size]
-                ctx_seg_batch = ctxs_segments[batch_start : batch_start + sub_batch_size]
+                ctx_ids_batch = ctxs_ids[batch_start: batch_start + sub_batch_size]
+                ctx_seg_batch = ctxs_segments[batch_start: batch_start + sub_batch_size]
 
                 q_attn_mask = self.tensorizer.get_attn_mask(q_ids)
                 ctx_attn_mask = self.tensorizer.get_attn_mask(ctx_ids_batch)
@@ -429,11 +410,11 @@ class BiEncoderTrainer(object):
         return av_rank
 
     def _train_epoch(
-        self,
-        scheduler,
-        epoch: int,
-        eval_step: int,
-        train_data_iterator: MultiSetDataIterator,
+            self,
+            scheduler,
+            epoch: int,
+            eval_step: int,
+            train_data_iterator: MultiSetDataIterator,
     ):
 
         cfg = self.cfg
@@ -602,13 +583,13 @@ class BiEncoderTrainer(object):
 
 
 def _calc_loss(
-    cfg,
-    loss_function,
-    local_q_vector,
-    local_ctx_vectors,
-    local_positive_idxs,
-    local_hard_negatives_idxs: list = None,
-    loss_scale: float = None,
+        cfg,
+        loss_function,
+        local_q_vector,
+        local_ctx_vectors,
+        local_positive_idxs,
+        local_hard_negatives_idxs: list = None,
+        loss_scale: float = None,
 ) -> Tuple[T, bool]:
     """
     Calculates In-batch negatives schema loss and supports to run it in DDP mode by exchanging the representations
@@ -684,15 +665,14 @@ def _print_norms(model):
 
 
 def _do_biencoder_fwd_pass(
-    model: nn.Module,
-    input: BiEncoderBatch,
-    tensorizer: Tensorizer,
-    cfg,
-    encoder_type: str,
-    rep_positions=0,
-    loss_scale: float = None,
+        model: nn.Module,
+        input: BiEncoderBatch,
+        tensorizer: Tensorizer,
+        cfg,
+        encoder_type: str,
+        rep_positions=0,
+        loss_scale: float = None,
 ) -> Tuple[torch.Tensor, int]:
-
     input = BiEncoderBatch(**move_to_device(input._asdict(), cfg.device))
 
     q_attn_mask = tensorizer.get_attn_mask(input.question_ids)
@@ -781,7 +761,7 @@ if __name__ == "__main__":
     # convert the cli params added by torch.distributed.launch into Hydra format
     for arg in sys.argv:
         if arg.startswith("--"):
-            hydra_formatted_args.append(arg[len("--") :])
+            hydra_formatted_args.append(arg[len("--"):])
         else:
             hydra_formatted_args.append(arg)
     logger.info("Hydra formatted Sys.argv: %s", hydra_formatted_args)

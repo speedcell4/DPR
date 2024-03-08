@@ -10,22 +10,19 @@
 """
 
 import glob
+import hydra
 import json
 import logging
+import numpy as np
 import pickle
 import time
-import zlib
-from typing import List, Tuple, Dict, Iterator
-
-import hydra
-import numpy as np
 import torch
+import zlib
 from omegaconf import DictConfig, OmegaConf
-from torch import Tensor as T
-from torch import nn
+from torch import Tensor as T, nn
+from typing import Dict, Iterator, List, Tuple
 
-from dpr.utils.data_utils import RepTokenSelector
-from dpr.data.qa_validation import calculate_matches, calculate_chunked_matches, calculate_matches_from_meta
+from dpr.data.qa_validation import calculate_chunked_matches, calculate_matches, calculate_matches_from_meta
 from dpr.data.retriever_data import KiltCsvCtxSrc, TableChunk
 from dpr.indexer.faiss_indexers import (
     DenseIndexer,
@@ -35,28 +32,28 @@ from dpr.models.biencoder import (
     BiEncoder,
     _select_span_with_token,
 )
-from dpr.options import setup_logger, setup_cfg_gpu, set_cfg_params_from_state
-from dpr.utils.data_utils import Tensorizer
-from dpr.utils.model_utils import setup_for_distributed_mode, get_model_obj, load_states_from_checkpoint
+from dpr.options import set_cfg_params_from_state, setup_cfg_gpu, setup_logger
+from dpr.utils.data_utils import RepTokenSelector, Tensorizer
+from dpr.utils.model_utils import get_model_obj, load_states_from_checkpoint, setup_for_distributed_mode
 
 logger = logging.getLogger()
 setup_logger(logger)
 
 
 def generate_question_vectors(
-    question_encoder: torch.nn.Module,
-    tensorizer: Tensorizer,
-    questions: List[str],
-    bsz: int,
-    query_token: str = None,
-    selector: RepTokenSelector = None,
+        question_encoder: torch.nn.Module,
+        tensorizer: Tensorizer,
+        questions: List[str],
+        bsz: int,
+        query_token: str = None,
+        selector: RepTokenSelector = None,
 ) -> T:
     n = len(questions)
     query_vectors = []
 
     with torch.no_grad():
         for j, batch_start in enumerate(range(0, n, bsz)):
-            batch_questions = questions[batch_start : batch_start + bsz]
+            batch_questions = questions[batch_start: batch_start + bsz]
 
             if query_token:
                 # TODO: tmp workaround for EL, remove or revise
@@ -116,7 +113,6 @@ class DenseRetriever(object):
         self.selector = None
 
     def generate_question_vectors(self, questions: List[str], query_token: str = None) -> T:
-
         bsz = self.batch_size
         self.question_encoder.eval()
         return generate_question_vectors(
@@ -135,20 +131,20 @@ class LocalFaissRetriever(DenseRetriever):
     """
 
     def __init__(
-        self,
-        question_encoder: nn.Module,
-        batch_size: int,
-        tensorizer: Tensorizer,
-        index: DenseIndexer,
+            self,
+            question_encoder: nn.Module,
+            batch_size: int,
+            tensorizer: Tensorizer,
+            index: DenseIndexer,
     ):
         super().__init__(question_encoder, batch_size, tensorizer)
         self.index = index
 
     def index_encoded_data(
-        self,
-        vector_files: List[str],
-        buffer_size: int,
-        path_id_prefixes: List = None,
+            self,
+            vector_files: List[str],
+            buffer_size: int,
+            path_id_prefixes: List = None,
     ):
         """
         Indexes encoded passages takes form a list of files
@@ -182,14 +178,14 @@ class LocalFaissRetriever(DenseRetriever):
 # works only with our distributed_faiss library
 class DenseRPCRetriever(DenseRetriever):
     def __init__(
-        self,
-        question_encoder: nn.Module,
-        batch_size: int,
-        tensorizer: Tensorizer,
-        index_cfg_path: str,
-        dim: int,
-        use_l2_conversion: bool = False,
-        nprobe: int = 256,
+            self,
+            question_encoder: nn.Module,
+            batch_size: int,
+            tensorizer: Tensorizer,
+            index_cfg_path: str,
+            dim: int,
+            use_l2_conversion: bool = False,
+            nprobe: int = 256,
     ):
         from distributed_faiss.client import IndexClient
 
@@ -217,10 +213,10 @@ class DenseRPCRetriever(DenseRetriever):
         self._wait_index_ready(index_id)
 
     def index_encoded_data(
-        self,
-        vector_files: List[str],
-        buffer_size: int = 1000,
-        path_id_prefixes: List = None,
+            self,
+            vector_files: List[str],
+            buffer_size: int = 1000,
+            path_id_prefixes: List = None,
     ):
         """
         Indexes encoded passages takes form a list of files
@@ -256,7 +252,7 @@ class DenseRPCRetriever(DenseRetriever):
         self._wait_index_ready(index_id)
 
     def get_top_docs(
-        self, query_vectors: np.array, top_docs: int = 100, search_batch: int = 512
+            self, query_vectors: np.array, top_docs: int = 100, search_batch: int = 512
     ) -> List[Tuple[List[object], List[float]]]:
         """
         Does the retrieval of the best matching passages given the query vectors batch
@@ -274,7 +270,7 @@ class DenseRPCRetriever(DenseRetriever):
         results = []
         for i in range(0, query_vectors.shape[0], search_batch):
             time0 = time.time()
-            query_batch = query_vectors[i : i + search_batch]
+            query_batch = query_vectors[i: i + search_batch]
             logger.info("query_batch: %s", query_batch.shape)
             # scores, meta = self.index_client.search(query_batch, top_docs, self.index_id)
 
@@ -299,11 +295,11 @@ class DenseRPCRetriever(DenseRetriever):
 
 
 def validate(
-    passages: Dict[object, Tuple[str, str]],
-    answers: List[List[str]],
-    result_ctx_ids: List[Tuple[List[object], List[float]]],
-    workers_num: int,
-    match_type: str,
+        passages: Dict[object, Tuple[str, str]],
+        answers: List[List[str]],
+        result_ctx_ids: List[Tuple[List[object], List[float]]],
+        workers_num: int,
+        match_type: str,
 ) -> List[List[bool]]:
     logger.info("validating passages. size=%d", len(passages))
     match_stats = calculate_matches(passages, answers, result_ctx_ids, workers_num, match_type)
@@ -316,13 +312,12 @@ def validate(
 
 
 def validate_from_meta(
-    answers: List[List[str]],
-    result_ctx_ids: List[Tuple[List[object], List[float]]],
-    workers_num: int,
-    match_type: str,
-    meta_compressed: bool,
+        answers: List[List[str]],
+        result_ctx_ids: List[Tuple[List[object], List[float]]],
+        workers_num: int,
+        match_type: str,
+        meta_compressed: bool,
 ) -> List[List[bool]]:
-
     match_stats = calculate_matches_from_meta(
         answers, result_ctx_ids, workers_num, match_type, use_title=True, meta_compressed=meta_compressed
     )
@@ -335,12 +330,12 @@ def validate_from_meta(
 
 
 def save_results(
-    passages: Dict[object, Tuple[str, str]],
-    questions: List[str],
-    answers: List[List[str]],
-    top_passages_and_scores: List[Tuple[List[object], List[float]]],
-    per_question_hits: List[List[bool]],
-    out_file: str,
+        passages: Dict[object, Tuple[str, str]],
+        questions: List[str],
+        answers: List[List[str]],
+        top_passages_and_scores: List[Tuple[List[object], List[float]]],
+        per_question_hits: List[List[bool]],
+        out_file: str,
 ):
     # join passages text with the result ids, their questions and assigning has|no answer labels
     merged_data = []
@@ -381,12 +376,12 @@ def save_results(
 
 # TODO: unify with save_results
 def save_results_from_meta(
-    questions: List[str],
-    answers: List[List[str]],
-    top_passages_and_scores: List[Tuple[List[object], List[float]]],
-    per_question_hits: List[List[bool]],
-    out_file: str,
-    rpc_meta_compressed: bool = False,
+        questions: List[str],
+        answers: List[List[str]],
+        top_passages_and_scores: List[Tuple[List[object], List[float]]],
+        per_question_hits: List[List[bool]],
+        out_file: str,
+        rpc_meta_compressed: bool = False,
 ):
     # join passages text with the result ids, their questions and assigning has|no answer labels
     merged_data = []
@@ -437,11 +432,11 @@ def iterate_encoded_files(vector_files: list, path_id_prefixes: List = None) -> 
 
 
 def validate_tables(
-    passages: Dict[object, TableChunk],
-    answers: List[List[str]],
-    result_ctx_ids: List[Tuple[List[object], List[float]]],
-    workers_num: int,
-    match_type: str,
+        passages: Dict[object, TableChunk],
+        answers: List[List[str]],
+        result_ctx_ids: List[Tuple[List[object], List[float]]],
+        workers_num: int,
+        match_type: str,
 ) -> List[List[bool]]:
     match_stats = calculate_chunked_matches(passages, answers, result_ctx_ids, workers_num, match_type)
     top_k_chunk_hits = match_stats.top_k_chunk_hits
@@ -576,7 +571,7 @@ def main(cfg: DictConfig):
             )
         else:
             assert (
-                index_path or cfg.rpc_index_id
+                    index_path or cfg.rpc_index_id
             ), "Either encoded_ctx_files or index_path pr rpc_index_id parameter should be set."
 
         input_paths = []

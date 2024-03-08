@@ -11,14 +11,12 @@ BiEncoder component + loss function for 'all-in-batch' training
 
 import collections
 import logging
-import random
-from typing import Tuple, List
-
 import numpy as np
+import random
 import torch
 import torch.nn.functional as F
-from torch import Tensor as T
-from torch import nn
+from torch import Tensor as T, nn
+from typing import List, Tuple
 
 from dpr.data.biencoder_data import BiEncoderSample
 from dpr.utils.data_utils import Tensorizer
@@ -63,11 +61,11 @@ class BiEncoder(nn.Module):
     """Bi-Encoder model component. Encapsulates query/question and context/passage encoders."""
 
     def __init__(
-        self,
-        question_model: nn.Module,
-        ctx_model: nn.Module,
-        fix_q_encoder: bool = False,
-        fix_ctx_encoder: bool = False,
+            self,
+            question_model: nn.Module,
+            ctx_model: nn.Module,
+            fix_q_encoder: bool = False,
+            fix_ctx_encoder: bool = False,
     ):
         super(BiEncoder, self).__init__()
         self.question_model = question_model
@@ -77,12 +75,12 @@ class BiEncoder(nn.Module):
 
     @staticmethod
     def get_representation(
-        sub_model: nn.Module,
-        ids: T,
-        segments: T,
-        attn_mask: T,
-        fix_encoder: bool = False,
-        representation_token_pos=0,
+            sub_model: nn.Module,
+            ids: T,
+            segments: T,
+            attn_mask: T,
+            fix_encoder: bool = False,
+            representation_token_pos=0,
     ) -> (T, T, T):
         sequence_output = None
         pooled_output = None
@@ -111,15 +109,15 @@ class BiEncoder(nn.Module):
         return sequence_output, pooled_output, hidden_states
 
     def forward(
-        self,
-        question_ids: T,
-        question_segments: T,
-        question_attn_mask: T,
-        context_ids: T,
-        ctx_segments: T,
-        ctx_attn_mask: T,
-        encoder_type: str = None,
-        representation_token_pos=0,
+            self,
+            question_ids: T,
+            question_segments: T,
+            question_attn_mask: T,
+            context_ids: T,
+            ctx_segments: T,
+            ctx_attn_mask: T,
+            encoder_type: str = None,
+            representation_token_pos=0,
     ) -> Tuple[T, T]:
         q_encoder = self.question_model if encoder_type is None or encoder_type == "question" else self.ctx_model
         _q_seq, q_pooled_out, _q_hidden = self.get_representation(
@@ -139,16 +137,16 @@ class BiEncoder(nn.Module):
         return q_pooled_out, ctx_pooled_out
 
     def create_biencoder_input(
-        self,
-        samples: List[BiEncoderSample],
-        tensorizer: Tensorizer,
-        insert_title: bool,
-        num_hard_negatives: int = 0,
-        num_other_negatives: int = 0,
-        shuffle: bool = True,
-        shuffle_positives: bool = False,
-        hard_neg_fallback: bool = True,
-        query_token: str = None,
+            self,
+            samples: List[BiEncoderSample],
+            tensorizer: Tensorizer,
+            insert_title: bool,
+            num_hard_negatives: int = 0,
+            num_other_negatives: int = 0,
+            shuffle: bool = True,
+            shuffle_positives: bool = False,
+            hard_neg_fallback: bool = True,
+            query_token: str = None,
     ) -> BiEncoderBatch:
         """
         Creates a batch of the biencoder training tuple.
@@ -208,9 +206,9 @@ class BiEncoder(nn.Module):
                 [
                     i
                     for i in range(
-                        current_ctxs_len + hard_negatives_start_idx,
-                        current_ctxs_len + hard_negatives_end_idx,
-                    )
+                    current_ctxs_len + hard_negatives_start_idx,
+                    current_ctxs_len + hard_negatives_end_idx,
+                )
                 ]
             )
 
@@ -253,12 +251,12 @@ class BiEncoder(nn.Module):
 
 class BiEncoderNllLoss(object):
     def calc(
-        self,
-        q_vectors: T,
-        ctx_vectors: T,
-        positive_idx_per_question: list,
-        hard_negative_idx_per_question: list = None,
-        loss_scale: float = None,
+            self,
+            q_vectors: T,
+            ctx_vectors: T,
+            positive_idx_per_question: list,
+            hard_negative_idx_per_question: list = None,
+            loss_scale: float = None,
     ) -> Tuple[T, int]:
         """
         Computes nll loss for the given lists of question and ctx vectors.
@@ -313,7 +311,7 @@ def _select_span_with_token(text: str, tensorizer: Tensorizer, token_str: str = 
             rnd_shift = int((rnd.random() - 0.5) * left_shit / 2)
             left_shit += rnd_shift
 
-            query_tensor = query_tensor_full[start_pos - left_shit :]
+            query_tensor = query_tensor_full[start_pos - left_shit:]
             cls_id = tensorizer.tokenizer.cls_token_id
             if query_tensor[0] != cls_id:
                 query_tensor = torch.cat([torch.tensor([cls_id]), query_tensor], dim=0)

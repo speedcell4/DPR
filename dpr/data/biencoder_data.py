@@ -1,16 +1,15 @@
 import collections
 import glob
+import jsonlines
 import logging
+import numpy as np
 import os
 import random
+from omegaconf import DictConfig
 from typing import Dict, List, Tuple
 
-import jsonlines
-import numpy as np
-from omegaconf import DictConfig
-
 from dpr.data.tables import Table
-from dpr.utils.data_utils import read_data_from_json_files, Dataset
+from dpr.utils.data_utils import Dataset, read_data_from_json_files
 
 logger = logging.getLogger(__name__)
 BiEncoderPassage = collections.namedtuple("BiEncoderPassage", ["text", "title"])
@@ -34,16 +33,16 @@ class BiEncoderSample(object):
 
 class JsonQADataset(Dataset):
     def __init__(
-        self,
-        file: str,
-        selector: DictConfig = None,
-        special_token: str = None,
-        encoder_type: str = None,
-        shuffle_positives: bool = False,
-        normalize: bool = False,
-        query_special_suffix: str = None,
-        # tmp: for cc-net results only
-        exclude_gold: bool = False,
+            self,
+            file: str,
+            selector: DictConfig = None,
+            special_token: str = None,
+            encoder_type: str = None,
+            shuffle_positives: bool = False,
+            normalize: bool = False,
+            query_special_suffix: str = None,
+            # tmp: for cc-net results only
+            exclude_gold: bool = False,
     ):
         super().__init__(
             selector,
@@ -110,17 +109,17 @@ class JsonQADataset(Dataset):
 
 class JsonlQADataset(JsonQADataset):
     def __init__(
-        self,
-        file: str,
-        selector: DictConfig = None,
-        special_token: str = None,
-        encoder_type: str = None,
-        shuffle_positives: bool = False,
-        normalize: bool = False,
-        query_special_suffix: str = None,
-        # tmp: for cc-net results only
-        exclude_gold: bool = False,
-        total_data_size: int = -1,
+            self,
+            file: str,
+            selector: DictConfig = None,
+            special_token: str = None,
+            encoder_type: str = None,
+            shuffle_positives: bool = False,
+            normalize: bool = False,
+            query_special_suffix: str = None,
+            # tmp: for cc-net results only
+            exclude_gold: bool = False,
+            total_data_size: int = -1,
     ):
         super().__init__(
             file,
@@ -400,15 +399,15 @@ def get_table_string_for_answer_check(table: Table):  # this doesn't use caption
 # TODO: inherit from Jsonl
 class JsonLTablesQADataset(Dataset):
     def __init__(
-        self,
-        file: str,
-        is_train_set: bool,
-        selector: DictConfig = None,
-        shuffle_positives: bool = False,
-        max_negatives: int = 1,
-        seed: int = 0,
-        max_len=100,
-        split_type: str = "type1",
+            self,
+            file: str,
+            is_train_set: bool,
+            selector: DictConfig = None,
+            shuffle_positives: bool = False,
+            max_negatives: int = 1,
+            seed: int = 0,
+            max_len=100,
+            split_type: str = "type1",
     ):
         super().__init__(selector, shuffle_positives=shuffle_positives)
         self.data_files = glob.glob(file)
@@ -445,7 +444,7 @@ class JsonLTablesQADataset(Dataset):
         if self.is_train_set:
             self.rnd.shuffle(hard_negative_ctxs)
         positive_ctxs = positive_ctxs[0:1]
-        hard_negative_ctxs = hard_negative_ctxs[0 : self.max_negatives]
+        hard_negative_ctxs = hard_negative_ctxs[0: self.max_negatives]
 
         r.positive_passages = [
             BiEncoderPassage(self.linearize_func(self, ctx, True), ctx["caption"]) for ctx in positive_ctxs
@@ -561,7 +560,7 @@ class JsonLTablesQADataset(Dataset):
 
 
 def split_tables_to_chunks(
-    tables_dict: Dict[str, Table], max_table_len: int, split_type: str = "type1"
+        tables_dict: Dict[str, Table], max_table_len: int, split_type: str = "type1"
 ) -> List[Tuple[int, str, str, int]]:
     tables_as_dicts = [t.to_dpr_json() for k, t in tables_dict.items()]
     chunks = []

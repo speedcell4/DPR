@@ -11,14 +11,13 @@
 
 import collections
 import logging
+import regex as re
 import string
 import unicodedata
 import zlib
 from functools import partial
 from multiprocessing import Pool as ProcessPool
-from typing import Tuple, List, Dict
-
-import regex as re
+from typing import Dict, List, Tuple
 
 from dpr.data.retriever_data import TableChunk
 from dpr.utils.tokenizers import SimpleTokenizer
@@ -33,11 +32,11 @@ QATableMatchStats = collections.namedtuple(
 
 
 def calculate_matches(
-    all_docs: Dict[object, Tuple[str, str]],
-    answers: List[List[str]],
-    closest_docs: List[Tuple[List[object], List[float]]],
-    workers_num: int,
-    match_type: str,
+        all_docs: Dict[object, Tuple[str, str]],
+        answers: List[List[str]],
+        closest_docs: List[Tuple[List[object], List[float]]],
+        workers_num: int,
+        match_type: str,
 ) -> QAMatchStats:
     """
     Evaluates answers presence in the set of documents. This function is supposed to be used with a large collection of
@@ -80,14 +79,13 @@ def calculate_matches(
 
 
 def calculate_matches_from_meta(
-    answers: List[List[str]],
-    closest_docs: List[Tuple[List[object], List[float]]],
-    workers_num: int,
-    match_type: str,
-    use_title: bool = False,
-    meta_compressed: bool = False,
+        answers: List[List[str]],
+        closest_docs: List[Tuple[List[object], List[float]]],
+        workers_num: int,
+        match_type: str,
+        use_title: bool = False,
+        meta_compressed: bool = False,
 ) -> QAMatchStats:
-
     tok_opts = {}
     tokenizer = SimpleTokenizer(**tok_opts)
 
@@ -142,13 +140,13 @@ def check_answer(questions_answers_docs, tokenizer, match_type) -> List[bool]:
 
 
 def check_answer_from_meta(
-    questions_answers_docs,
-    tokenizer,
-    match_type,
-    meta_body_idx: int = 1,
-    meta_title_idx: int = 2,
-    use_title: bool = False,
-    meta_compressed: bool = False,
+        questions_answers_docs,
+        tokenizer,
+        match_type,
+        meta_body_idx: int = 1,
+        meta_title_idx: int = 2,
+        use_title: bool = False,
+        meta_compressed: bool = False,
 ) -> List[bool]:
     """Search through all the top docs to see if they have any of the answers."""
     answers, (docs_meta, doc_scores) = questions_answers_docs
@@ -189,7 +187,7 @@ def has_answer(answers, text, tokenizer, match_type) -> bool:
             single_answer = single_answer.words(uncased=True)
 
             for i in range(0, len(text) - len(single_answer) + 1):
-                if single_answer == text[i : i + len(single_answer)]:
+                if single_answer == text[i: i + len(single_answer)]:
                     return True
 
     elif match_type == "regex":
@@ -237,11 +235,11 @@ def _normalize(text):
 
 
 def calculate_chunked_matches(
-    all_docs: Dict[object, TableChunk],
-    answers: List[List[str]],
-    closest_docs: List[Tuple[List[object], List[float]]],
-    workers_num: int,
-    match_type: str,
+        all_docs: Dict[object, TableChunk],
+        answers: List[List[str]],
+        closest_docs: List[Tuple[List[object], List[float]]],
+        workers_num: int,
+        match_type: str,
 ) -> QATableMatchStats:
     global dpr_all_documents
     dpr_all_documents = all_docs

@@ -9,19 +9,18 @@
 Command line arguments utils
 """
 
-
 import logging
+import numpy as np
 import os
 import random
 import socket
 import subprocess
-from typing import Tuple
-
-import numpy as np
 import torch
 from omegaconf import DictConfig
+from typing import Tuple
 
 logger = logging.getLogger()
+
 
 # TODO: to be merged with conf_utils.py
 
@@ -135,7 +134,6 @@ def setup_cfg_gpu(cfg):
 
 
 def _infer_slurm_init(cfg) -> Tuple[str, int, int, int]:
-
     node_list = os.environ.get("SLURM_STEP_NODELIST")
     if node_list is None:
         node_list = os.environ.get("SLURM_JOB_NODELIST")

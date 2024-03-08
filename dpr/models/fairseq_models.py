@@ -10,16 +10,14 @@ Encoder model wrappers based on Fairseq code
 """
 import collections
 import logging
-from typing import Tuple
-
 from fairseq.models.roberta.hub_interface import RobertaHubInterface
 from fairseq.models.roberta.model import RobertaModel as FairseqRobertaModel
-from torch import Tensor as T
-from torch import nn
+from fairseq.optim.adam import FairseqAdam
+from torch import Tensor as T, nn
+from typing import Tuple
 
 from dpr.models.hf_models import get_roberta_tensorizer
 from dpr.utils.data_utils import Tensorizer
-from fairseq.optim.adam import FairseqAdam
 from .biencoder import BiEncoder
 
 logger = logging.getLogger(__name__)
@@ -54,11 +52,11 @@ class RobertaEncoder(nn.Module):
         return cls(model)
 
     def forward(
-        self,
-        input_ids: T,
-        token_type_ids: T,
-        attention_mask: T,
-        representation_token_pos=0,
+            self,
+            input_ids: T,
+            token_type_ids: T,
+            attention_mask: T,
+            representation_token_pos=0,
     ) -> Tuple[T, ...]:
         roberta_out = self.fairseq_roberta.extract_features(input_ids)
         cls_out = roberta_out[:, representation_token_pos, :]
@@ -69,7 +67,7 @@ class RobertaEncoder(nn.Module):
 
 
 def get_roberta_encoder_components(
-    pretrained_file: str, pretrained_model_cfg: str, do_lower_case: bool, sequence_length: int
+        pretrained_file: str, pretrained_model_cfg: str, do_lower_case: bool, sequence_length: int
 ) -> Tuple[RobertaEncoder, Tensorizer]:
     encoder = RobertaEncoder.from_pretrained(pretrained_file)
     tensorizer = get_roberta_tensorizer(pretrained_model_cfg, do_lower_case, sequence_length)

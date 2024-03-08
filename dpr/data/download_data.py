@@ -180,7 +180,7 @@ RESOURCES_MAP = {
         "original_ext": ".json",
         "compressed": True,
         "desc": "Original NQ (our test, original dev subset) gold positive passages and alternative question "
-        "tokenization",
+                "tokenization",
         "license_files": NQ_LICENSE_FILES,
     },
     "pretrained.fairseq.roberta-base.dict": {
@@ -209,7 +209,7 @@ RESOURCES_MAP = {
         "original_ext": ".pkl",
         "compressed": False,
         "desc": "Encoded wikipedia files using a biencoder checkpoint("
-        "checkpoint.retriever.single.nq.bert-base-encoder) trained on NQ dataset ",
+                "checkpoint.retriever.single.nq.bert-base-encoder) trained on NQ dataset ",
     },
     "data.retriever_results.nq.single-adv-hn.wikipedia_passages": {
         "s3_url": [
@@ -219,7 +219,7 @@ RESOURCES_MAP = {
         "original_ext": ".pkl",
         "compressed": False,
         "desc": "Encoded wikipedia files using a biencoder checkpoint("
-        "checkpoint.retriever.single-adv-hn.nq.bert-base-encoder) trained on NQ dataset + adversarial hard negatives",
+                "checkpoint.retriever.single-adv-hn.nq.bert-base-encoder) trained on NQ dataset + adversarial hard negatives",
     },
     "data.retriever_results.nq.single.test": {
         "s3_url": "https://dl.fbaipublicfiles.com/dpr/data/retriever_results/single/nq-test.json.gz",
@@ -266,7 +266,7 @@ RESOURCES_MAP = {
         "original_ext": ".cp",
         "compressed": False,
         "desc": "Biencoder weights trained on the original DPR NQ data combined with adversarial hard negatives (See data.retriever.nq-adv-hn-train resource). "
-        "The model is HF bert-base-uncased",
+                "The model is HF bert-base-uncased",
     },
     "data.reader.nq.single.train": {
         "s3_url": ["https://dl.fbaipublicfiles.com/dpr/data/reader/nq/single/train.{}.pkl".format(i) for i in range(8)],
@@ -297,21 +297,21 @@ RESOURCES_MAP = {
         "original_ext": ".pkl",
         "compressed": False,
         "desc": "Reader model Trivia train dataset input data preprocessed from hybrid retriever results "
-        "(where dense part is trained on multiset)",
+                "(where dense part is trained on multiset)",
     },
     "data.reader.trivia.multi-hybrid.dev": {
         "s3_url": "https://dl.fbaipublicfiles.com/dpr/data/reader/trivia/multi-hybrid/dev.0.pkl",
         "original_ext": ".pkl",
         "compressed": False,
         "desc": "Reader model Trivia dev dataset input data preprocessed from hybrid retriever results "
-        "(where dense part is trained on multiset)",
+                "(where dense part is trained on multiset)",
     },
     "data.reader.trivia.multi-hybrid.test": {
         "s3_url": "https://dl.fbaipublicfiles.com/dpr/data/reader/trivia/multi-hybrid/test.0.pkl",
         "original_ext": ".pkl",
         "compressed": False,
         "desc": "Reader model Trivia test dataset input data preprocessed from hybrid retriever results "
-        "(where dense part is trained on multiset)",
+                "(where dense part is trained on multiset)",
     },
     "checkpoint.reader.nq-single.hf-bert-base": {
         "s3_url": "https://dl.fbaipublicfiles.com/dpr/checkpoint/reader/nq-single/hf_bert_base.cp",
@@ -403,7 +403,7 @@ def unpack(gzip_file: str, out_file: str):
 
 
 def download_resource(
-    s3_url: str, original_ext: str, compressed: bool, resource_key: str, out_dir: str
+        s3_url: str, original_ext: str, compressed: bool, resource_key: str, out_dir: str
 ) -> Tuple[str, str]:
     logger.info("Requested resource from %s", s3_url)
     path_names = resource_key.split(".")

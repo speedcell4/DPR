@@ -1,8 +1,7 @@
 import glob
+import hydra
 import logging
 import os
-
-import hydra
 from omegaconf import DictConfig
 
 from dpr.data.biencoder_data import JsonQADataset

@@ -17,19 +17,14 @@ import math
 import multiprocessing
 import os
 import pickle
-from functools import partial
-from typing import Tuple, List, Dict, Iterable, Optional
-
 import torch
+from functools import partial
 from torch import Tensor as T
 from tqdm import tqdm
+from typing import Dict, Iterable, List, Optional, Tuple
 
-from dpr.utils.data_utils import (
-    Tensorizer,
-    read_serialized_data_from_files,
-    read_data_from_json_files,
-    Dataset as DprDataset,
-)
+from dpr.utils.data_utils import (Dataset as DprDataset, Tensorizer, read_data_from_json_files,
+                                  read_serialized_data_from_files)
 
 logger = logging.getLogger()
 
@@ -40,12 +35,12 @@ class ReaderPassage(object):
     """
 
     def __init__(
-        self,
-        id=None,
-        text: str = None,
-        title: str = None,
-        score=None,
-        has_answer: bool = None,
+            self,
+            id=None,
+            text: str = None,
+            title: str = None,
+            score=None,
+            has_answer: bool = None,
     ):
         self.id = id
         # string passage representations
@@ -77,12 +72,12 @@ class ReaderSample(object):
     """
 
     def __init__(
-        self,
-        question: str,
-        answers: List,
-        positive_passages: List[ReaderPassage] = [],
-        negative_passages: List[ReaderPassage] = [],
-        passages: List[ReaderPassage] = [],
+            self,
+            question: str,
+            answers: List,
+            positive_passages: List[ReaderPassage] = [],
+            negative_passages: List[ReaderPassage] = [],
+            passages: List[ReaderPassage] = [],
     ):
         self.question = question
         self.answers = answers
@@ -101,13 +96,13 @@ class ReaderSample(object):
 
 class ExtractiveReaderDataset(torch.utils.data.Dataset):
     def __init__(
-        self,
-        files: str,
-        is_train: bool,
-        gold_passages_src: str,
-        tensorizer: Tensorizer,
-        run_preprocessing: bool,
-        num_workers: int,
+            self,
+            files: str,
+            is_train: bool,
+            gold_passages_src: str,
+            tensorizer: Tensorizer,
+            run_preprocessing: bool,
+            num_workers: int,
     ):
         self.files = files
         self.data = []
@@ -129,7 +124,7 @@ class ExtractiveReaderDataset(torch.utils.data.Dataset):
         return len(self.data)
 
     def load_data(
-        self,
+            self,
     ):
         if self.data:
             return
@@ -142,8 +137,8 @@ class ExtractiveReaderDataset(torch.utils.data.Dataset):
         self.data = read_serialized_data_from_files(preprocessed_data_files)
 
     def _get_preprocessed_files(
-        self,
-        data_files: List,
+            self,
+            data_files: List,
     ):
 
         serialized_files = [file for file in data_files if file.endswith(".pkl")]
@@ -232,11 +227,11 @@ DEFAULT_EVAL_PASSAGES = 100
 
 
 def preprocess_retriever_data(
-    samples: List[Dict],
-    gold_info_file: Optional[str],
-    tensorizer: Tensorizer,
-    cfg: ReaderPreprocessingCfg = DEFAULT_PREPROCESSING_CFG_TRAIN,
-    is_train_set: bool = True,
+        samples: List[Dict],
+        gold_info_file: Optional[str],
+        tensorizer: Tensorizer,
+        cfg: ReaderPreprocessingCfg = DEFAULT_PREPROCESSING_CFG_TRAIN,
+        is_train_set: bool = True,
 ) -> Iterable[ReaderSample]:
     """
     Converts retriever results into reader training data.
@@ -318,12 +313,12 @@ def preprocess_retriever_data(
 
 
 def convert_retriever_results(
-    is_train_set: bool,
-    input_file: str,
-    out_file_prefix: str,
-    gold_passages_file: str,
-    tensorizer: Tensorizer,
-    num_workers: int = 8,
+        is_train_set: bool,
+        input_file: str,
+        out_file_prefix: str,
+        gold_passages_file: str,
+        tensorizer: Tensorizer,
+        num_workers: int = 8,
 ) -> List[str]:
     """
     Converts the file with dense retriever(or any compatible file format) results into the reader input data and
@@ -344,7 +339,7 @@ def convert_retriever_results(
     workers = multiprocessing.Pool(num_workers)
     ds_size = len(samples)
     step = max(math.ceil(ds_size / num_workers), 1)
-    chunks = [samples[i : i + step] for i in range(0, ds_size, step)]
+    chunks = [samples[i: i + step] for i in range(0, ds_size, step)]
     chunks = [(i, chunks[i]) for i in range(len(chunks))]
 
     logger.info("Split data into %d chunks", len(chunks))
@@ -368,21 +363,21 @@ def convert_retriever_results(
 
 
 def get_best_spans(
-    tensorizer: Tensorizer,
-    start_logits: List,
-    end_logits: List,
-    ctx_ids: List,
-    max_answer_length: int,
-    passage_idx: int,
-    relevance_score: float,
-    top_spans: int = 1,
+        tensorizer: Tensorizer,
+        start_logits: List,
+        end_logits: List,
+        ctx_ids: List,
+        max_answer_length: int,
+        passage_idx: int,
+        relevance_score: float,
+        top_spans: int = 1,
 ) -> List[SpanPrediction]:
     """
     Finds the best answer span for the extractive Q&A model
     """
     scores = []
     for (i, s) in enumerate(start_logits):
-        for (j, e) in enumerate(end_logits[i : i + max_answer_length]):
+        for (j, e) in enumerate(end_logits[i: i + max_answer_length]):
             scores.append(((i, i + j), s + e))
 
     scores = sorted(scores, key=lambda x: x[1], reverse=True)
@@ -396,18 +391,18 @@ def get_best_spans(
         assert length <= max_answer_length
 
         if any(
-            [
-                start_index <= prev_start_index <= prev_end_index <= end_index
-                or prev_start_index <= start_index <= end_index <= prev_end_index
-                for (prev_start_index, prev_end_index) in chosen_span_intervals
-            ]
+                [
+                    start_index <= prev_start_index <= prev_end_index <= end_index
+                    or prev_start_index <= start_index <= end_index <= prev_end_index
+                    for (prev_start_index, prev_end_index) in chosen_span_intervals
+                ]
         ):
             continue
 
         # extend bpe subtokens to full tokens
         start_index, end_index = _extend_span_to_full_words(tensorizer, ctx_ids, (start_index, end_index))
 
-        predicted_answer = tensorizer.to_string(ctx_ids[start_index : end_index + 1])
+        predicted_answer = tensorizer.to_string(ctx_ids[start_index: end_index + 1])
         best_spans.append(SpanPrediction(predicted_answer, score, relevance_score, passage_idx, ctx_ids))
         chosen_span_intervals.append((start_index, end_index))
 
@@ -417,17 +412,17 @@ def get_best_spans(
 
 
 def _select_reader_passages(
-    sample: Dict,
-    question: str,
-    tensorizer: Tensorizer,
-    gold_passage_map: Optional[Dict[str, ReaderPassage]],
-    gold_page_only_positives: bool,
-    max_positives: int,
-    max1_negatives: int,
-    max2_negatives: int,
-    max_retriever_passages: int,
-    include_gold_passage: bool,
-    is_train_set: bool,
+        sample: Dict,
+        question: str,
+        tensorizer: Tensorizer,
+        gold_passage_map: Optional[Dict[str, ReaderPassage]],
+        gold_page_only_positives: bool,
+        max_positives: int,
+        max1_negatives: int,
+        max2_negatives: int,
+        max_retriever_passages: int,
+        include_gold_passage: bool,
+        is_train_set: bool,
 ) -> Tuple[List[ReaderPassage], List[ReaderPassage]]:
     answers = sample["answers"]
 
@@ -522,7 +517,7 @@ def _find_answer_positions(ctx_ids: T, answer: T) -> List[Tuple[int, int]]:
     a_len = answer.size(0)
     answer_occurences = []
     for i in range(0, c_len - a_len + 1):
-        if (answer == ctx_ids[i : i + a_len]).all():
+        if (answer == ctx_ids[i: i + a_len]).all():
             answer_occurences.append((i, i + a_len - 1))
     return answer_occurences
 
@@ -589,11 +584,11 @@ def _extend_span_to_full_words(tensorizer: Tensorizer, tokens: List[int], span: 
 
 
 def _preprocess_reader_samples_chunk(
-    samples: List,
-    out_file_prefix: str,
-    gold_passages_file: str,
-    tensorizer: Tensorizer,
-    is_train_set: bool,
+        samples: List,
+        out_file_prefix: str,
+        gold_passages_file: str,
+        tensorizer: Tensorizer,
+        is_train_set: bool,
 ) -> str:
     chunk_id, samples = samples
     logger.info("Start batch %d", len(samples))

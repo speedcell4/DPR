@@ -75,7 +75,7 @@ class DenseIndexer(object):
         with open(meta_file, "rb") as reader:
             self.index_id_to_db_id = pickle.load(reader)
         assert (
-            len(self.index_id_to_db_id) == self.index.ntotal
+                len(self.index_id_to_db_id) == self.index.ntotal
         ), "Deserialized index_id_to_db_id should match faiss index size"
 
     def _update_id_mapping(self, db_ids: List) -> int:
@@ -94,8 +94,8 @@ class DenseFlatIndexer(DenseIndexer):
         n = len(data)
         # indexing in batches is beneficial for many faiss index types
         for i in range(0, n, self.buffer_size):
-            db_ids = [t[0] for t in data[i : i + self.buffer_size]]
-            vectors = [np.reshape(t[1], (1, -1)) for t in data[i : i + self.buffer_size]]
+            db_ids = [t[0] for t in data[i: i + self.buffer_size]]
+            vectors = [np.reshape(t[1], (1, -1)) for t in data[i: i + self.buffer_size]]
             vectors = np.concatenate(vectors, axis=0)
             total_data = self._update_id_mapping(db_ids)
             self.index.add(vectors)
@@ -121,11 +121,11 @@ class DenseHNSWFlatIndexer(DenseIndexer):
     """
 
     def __init__(
-        self,
-        buffer_size: int = 1e9,
-        store_n: int = 512,
-        ef_search: int = 128,
-        ef_construction: int = 200,
+            self,
+            buffer_size: int = 1e9,
+            store_n: int = 512,
+            ef_search: int = 128,
+            ef_construction: int = 200,
     ):
         super(DenseHNSWFlatIndexer, self).__init__(buffer_size=buffer_size)
         self.store_n = store_n
@@ -160,8 +160,8 @@ class DenseHNSWFlatIndexer(DenseIndexer):
         # indexing in batches is beneficial for many faiss index types
         bs = int(self.buffer_size)
         for i in range(0, n, bs):
-            db_ids = [t[0] for t in data[i : i + bs]]
-            vectors = [np.reshape(t[1], (1, -1)) for t in data[i : i + bs]]
+            db_ids = [t[0] for t in data[i: i + bs]]
+            vectors = [np.reshape(t[1], (1, -1)) for t in data[i: i + bs]]
 
             norms = [(doc_vector ** 2).sum() for doc_vector in vectors]
             aux_dims = [np.sqrt(phi - norm) for norm in norms]
@@ -204,11 +204,11 @@ class DenseHNSWSQIndexer(DenseHNSWFlatIndexer):
     """
 
     def __init__(
-        self,
-        buffer_size: int = 1e10,
-        store_n: int = 128,
-        ef_search: int = 128,
-        ef_construction: int = 200,
+            self,
+            buffer_size: int = 1e10,
+            store_n: int = 128,
+            ef_search: int = 128,
+            ef_construction: int = 200,
     ):
         super(DenseHNSWSQIndexer, self).__init__(
             buffer_size=buffer_size,

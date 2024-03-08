@@ -8,20 +8,18 @@
 """
 Utilities for general purpose data processing
 """
+import hydra
+import itertools
 import json
+import jsonlines
 import logging
+import math
 import pickle
 import random
-
-import itertools
-import math
-
-import hydra
-import jsonlines
 import torch
 from omegaconf import DictConfig
 from torch import Tensor as T
-from typing import List, Iterator, Callable, Tuple
+from typing import Callable, Iterator, List, Tuple
 
 logger = logging.getLogger()
 
@@ -72,11 +70,11 @@ class Tensorizer(object):
 
     # Note: title, if present, is supposed to be put before text (i.e. optional title + document body)
     def text_to_tensor(
-        self,
-        text: str,
-        title: str = None,
-        add_special_tokens: bool = True,
-        apply_max_len: bool = True,
+            self,
+            text: str,
+            title: str = None,
+            add_special_tokens: bool = True,
+            apply_max_len: bool = True,
     ):
         raise NotImplementedError
 
@@ -151,12 +149,12 @@ DEFAULT_SELECTOR = RepStaticPosTokenSelector()
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(
-        self,
-        selector: DictConfig = None,
-        special_token: str = None,
-        shuffle_positives: bool = False,
-        query_special_suffix: str = None,
-        encoder_type: str = None,
+            self,
+            selector: DictConfig = None,
+            special_token: str = None,
+            shuffle_positives: bool = False,
+            query_special_suffix: str = None,
+            encoder_type: str = None,
     ):
         if selector:
             self.selector = hydra.utils.instantiate(selector)
@@ -200,15 +198,15 @@ class ShardedDataIterator(object):
     """
 
     def __init__(
-        self,
-        dataset: Dataset,
-        shard_id: int = 0,
-        num_shards: int = 1,
-        batch_size: int = 1,
-        shuffle=True,
-        shuffle_seed: int = 0,
-        offset: int = 0,
-        strict_batch_size: bool = False,
+            self,
+            dataset: Dataset,
+            shard_id: int = 0,
+            num_shards: int = 1,
+            batch_size: int = 1,
+            shuffle=True,
+            shuffle_seed: int = 0,
+            offset: int = 0,
+            strict_batch_size: bool = False,
     ):
 
         self.dataset = dataset
@@ -274,7 +272,7 @@ class ShardedDataIterator(object):
             # to be able to resume, same shuffling should be used when starting from a failed/stopped iteration
             epoch_rnd = random.Random(self.shuffle_seed + epoch)
             epoch_rnd.shuffle(indices)
-        shard_indices = indices[self.shard_start_idx : self.shard_end_idx]
+        shard_indices = indices[self.shard_start_idx: self.shard_end_idx]
         return shard_indices
 
     # TODO: merge with iterate_ds_sampled_data
@@ -284,10 +282,10 @@ class ShardedDataIterator(object):
         shard_indices = self.get_shard_indices(epoch)
 
         for i in range(self.iteration * self.batch_size, len(shard_indices), self.batch_size):
-            items_idxs = shard_indices[i : i + self.batch_size]
+            items_idxs = shard_indices[i: i + self.batch_size]
             if self.strict_batch_size and len(items_idxs) < self.batch_size:
                 logger.debug("Extending batch to max size")
-                items_idxs.extend(shard_indices[0 : self.batch_size - len(items)])
+                items_idxs.extend(shard_indices[0: self.batch_size - len(items)])
             self.iteration += 1
             items = [self.dataset[idx] for idx in items_idxs]
             yield items
@@ -296,7 +294,7 @@ class ShardedDataIterator(object):
         while self.iteration < max_iterations:
             logger.debug("Fulfilling non complete shard=".format(self.shard_id))
             self.iteration += 1
-            items_idxs = shard_indices[0 : self.batch_size]
+            items_idxs = shard_indices[0: self.batch_size]
             items = [self.dataset[idx] for idx in items_idxs]
             yield items
 
@@ -345,12 +343,12 @@ class MultiSetDataIterator(object):
     """
 
     def __init__(
-        self,
-        datasets: List[ShardedDataIterator],
-        shuffle_seed: int = 0,
-        shuffle=True,
-        sampling_rates: List = [],
-        rank: int = 0,
+            self,
+            datasets: List[ShardedDataIterator],
+            shuffle_seed: int = 0,
+            shuffle=True,
+            sampling_rates: List = [],
+            rank: int = 0,
     ):
         # randomized data loading to avoid file system congestion
         ds_list_copy = [ds for ds in datasets]
